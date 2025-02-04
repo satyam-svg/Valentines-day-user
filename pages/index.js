@@ -5,7 +5,7 @@ import { Slippers } from "../components/Models/Slippers";
 import { useLights } from "../context/Lightcontext";
 import Avtar from "../components/Models/Avtar";
 import Heart from "../components/Models/Heart";
-import { Physics } from "@react-three/cannon";
+import { Text3D } from "@react-three/drei";
 
 const Index = () => {
   const { lightsOn, setLightsOn } = useLights();
@@ -125,6 +125,64 @@ const Index = () => {
         
         {/* Render all the hearts */}
         {hearts}
+        {lightsOn && (
+          <>
+          <Text3D 
+    font="./fonts/Irish Grover_Regular.json" 
+    position={[0.5, 0.66, 2]} 
+    scale={[0.2, 0.2, 0.25]}
+    rotation={[0, -0.1, 0]}
+    bevelEnabled={true}  // Optional, for beveled edges
+    bevelSize={0.05}     // Optional, controls the bevel size
+    bevelThickness={0.1} // Optional, controls the thickness of bevels
+  >
+    HAPPY
+    <meshNormalMaterial color="#ff69b4" roughness={0.2} metalness={1} />
+    <pointLight intensity={0.5} color={"yellow"}/>
+  </Text3D>
+  <Text3D 
+    font="./fonts/Irish Grover_Regular.json" 
+    position={[0.5, 0.66, 2.6]} 
+    scale={[0.2, 0.2, 0.25]}
+    rotation={[0, -0.1, 0]}
+    bevelEnabled={true}  // Optional, for beveled edges
+    bevelSize={0.05}     // Optional, controls the bevel size
+    bevelThickness={0.1} // Optional, controls the thickness of bevels
+  >
+    VALENTINES
+    <meshNormalMaterial color="#ff69b4" roughness={0.2} metalness={1} />
+    <pointLight intensity={0.5} color={"red"}/>
+  </Text3D>
+  <Text3D 
+    font="./fonts/Irish Grover_Regular.json" 
+    position={[0.1, 0.66, 3.1]} 
+    scale={[0.2, 0.2, 0.25]}
+    rotation={[0, -0.1, 0]}
+    bevelEnabled={true}  // Optional, for beveled edges
+    bevelSize={0.05}     // Optional, controls the bevel size
+    bevelThickness={0.1} // Optional, controls the thickness of bevels
+  >
+    DAY
+    <meshNormalMaterial color="#ff69b4" roughness={0.2} metalness={1} />
+    <pointLight intensity={0.5} color={"blue"}/>
+  </Text3D>
+  <Text3D 
+    font="./fonts/Irish Grover_Regular.json" 
+    position={[0.3, 0.66, 3.6]} 
+    scale={[0.2, 0.2, 0.25]}
+    rotation={[0, -0.1, 0]}
+    bevelEnabled={true}  // Optional, for beveled edges
+    bevelSize={0.05}     // Optional, controls the bevel size
+    bevelThickness={0.1} // Optional, controls the thickness of bevels
+  >
+    SAHII
+    <meshNormalMaterial color="#ff69b4" roughness={0.2} metalness={1} />
+    <pointLight intensity={0.5} color={"pink"}/>
+  </Text3D>
+          </>
+  
+)}
+
 
         <ContactShadows />
       </Canvas>
