@@ -137,8 +137,12 @@ const Index = () => {
     bevelThickness={0.1} // Optional, controls the thickness of bevels
   >
     HAPPY
-    <meshNormalMaterial color="#ff69b4" roughness={0.2} metalness={1} />
+    <meshStandardMaterial color="#ff69b4" roughness={0.2} metalness={1} />
     <pointLight intensity={0.5} color={"yellow"}/>
+    <pointLight intensity={0.5} position={[2,0,0]} color={"yellow"}/>
+    <pointLight intensity={0.5} position={[3,0,0]} color={"yellow"}/>
+    <pointLight intensity={0.5} position={[4,0,0]} color={"yellow"}/>
+    <pointLight intensity={0.5} position={[5,0,0]} color={"yellow"}/>
   </Text3D>
   <Text3D 
     font="./fonts/Irish Grover_Regular.json" 
@@ -150,8 +154,14 @@ const Index = () => {
     bevelThickness={0.1} // Optional, controls the thickness of bevels
   >
     VALENTINES
-    <meshNormalMaterial color="#ff69b4" roughness={0.2} metalness={1} />
-    <pointLight intensity={0.5} color={"red"}/>
+    <meshStandardMaterial color="#f033ff" roughness={0.2} metalness={1} />
+    <pointLight intensity={0.5} color={"red"} />
+    <pointLight intensity={0.5} color={"yellow"}/>
+    <pointLight intensity={0.5} position={[2,0,0]} color={"red"}/>
+    <pointLight intensity={0.5} position={[3,0,0]} color={"red"}/>
+    <pointLight intensity={0.5} position={[4,0,0]} color={"red"}/>
+    <pointLight intensity={0.5} position={[5,0,0]} color={"red"}/>
+    <pointLight intensity={1} position={[8,0,0]} color={"red"}/>
   </Text3D>
   <Text3D 
     font="./fonts/Irish Grover_Regular.json" 
@@ -163,8 +173,11 @@ const Index = () => {
     bevelThickness={0.1} // Optional, controls the thickness of bevels
   >
     DAY
-    <meshNormalMaterial color="#ff69b4" roughness={0.2} metalness={1} />
+    <meshStandardMaterial color="#ff69b4" roughness={0.2} metalness={1} />
     <pointLight intensity={0.5} color={"blue"}/>
+    <pointLight intensity={0.5} position={[2,0,0]} color={"blue"}/>
+    <pointLight intensity={0.5} position={[3,0,0]} color={"blue"}/>
+    <pointLight intensity={0.5} position={[4,0,0]} color={"blue"}/>
   </Text3D>
   <Text3D 
     font="./fonts/Irish Grover_Regular.json" 
@@ -176,8 +189,11 @@ const Index = () => {
     bevelThickness={0.1} // Optional, controls the thickness of bevels
   >
     SAHII
-    <meshNormalMaterial color="#ff69b4" roughness={0.2} metalness={1} />
-    <pointLight intensity={0.5} color={"pink"}/>
+    <meshStandardMaterial color="#ff69b4" roughness={0.2} metalness={1} />
+    <pointLight intensity={0.5} color={"yellow"}/>
+    <pointLight intensity={0.5} position={[2,0,0]} color={"yellow"}/>
+    <pointLight intensity={0.5} position={[3,0,0]} color={"yellow"}/>
+    <pointLight intensity={0.5} position={[4,0,0]} color={"yellow"}/>
   </Text3D>
           </>
   
