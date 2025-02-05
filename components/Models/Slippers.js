@@ -1,7 +1,7 @@
 import React, { useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber';
-import { useLights } from '../../context/Lightcontext';
+
+import { useLights } from '../../context/LightContext';
 export  function Slippers(props) {
   const { nodes, materials } = useGLTF('/scene.gltf')
   const {lightsOn} =useLights();
