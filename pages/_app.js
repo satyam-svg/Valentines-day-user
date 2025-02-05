@@ -1,5 +1,5 @@
 import "../styles/globals.css";
-import { LightsProvider } from "../context/Lightcontext";
+import { LightsProvider } from "../context/LightContext";
 
 export default function App({ Component, pageProps }) {
   return (

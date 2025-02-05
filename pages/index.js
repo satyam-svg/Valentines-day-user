@@ -2,7 +2,7 @@ import { ContactShadows, OrbitControls, PerspectiveCamera } from "@react-three/d
 import { Canvas } from "@react-three/fiber";
 import React, { useEffect, useState } from "react";
 import { Slippers } from "../components/Models/Slippers";
-import { useLights } from "../context/Lightcontext";
+import { useLights } from "../context/LightContext";
 import Avtar from "../components/Models/Avtar";
 import Heart from "../components/Models/Heart";
 import { Text3D } from "@react-three/drei";
