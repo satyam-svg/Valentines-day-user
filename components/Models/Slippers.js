@@ -3,7 +3,7 @@ import { useGLTF } from '@react-three/drei'
 
 import { useLights } from '../../context/LightContext';
 export  function Slippers(props) {
-  const { nodes, materials } = useGLTF('/scene.gltf')
+  const { nodes, materials } = useGLTF('/home/scene.gltf')
   const {lightsOn} =useLights();
 
   
@@ -790,4 +790,4 @@ export  function Slippers(props) {
   )
 }
 
-useGLTF.preload('/scene.gltf')
+useGLTF.preload('/home/scene.gltf')

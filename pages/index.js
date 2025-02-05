@@ -120,11 +120,11 @@ const Index = () => {
           </>
         )}
 
-        {/* <Slippers position={[0, 0.6, 0]} /> */}
+        <Slippers position={[0, 0.6, 0]} />
         <Avtar position={[-1.4, 0.6, 3]} />
         
         {/* Render all the hearts */}
-        {/* {hearts}
+        {hearts}
         {lightsOn && (
           <>
           <Text3D 
@@ -197,7 +197,7 @@ const Index = () => {
   </Text3D>
           </>
   
-)} */}
+)}
 
 
         <ContactShadows />
