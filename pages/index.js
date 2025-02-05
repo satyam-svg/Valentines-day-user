@@ -120,8 +120,8 @@ const Index = () => {
           </>
         )}
 
-        <Slippers position={[0, 0.6, 0]} />
-        {/* <Avtar position={[-1.4, 0.6, 3]} /> */}
+        {/* <Slippers position={[0, 0.6, 0]} /> */}
+        <Avtar position={[-1.4, 0.6, 3]} />
         
         {/* Render all the hearts */}
         {/* {hearts}
