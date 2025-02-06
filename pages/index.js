@@ -1,18 +1,52 @@
-import { ContactShadows, OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { ContactShadows, OrbitControls, PerspectiveCamera, Text3D } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import React, { useEffect, useState } from "react";
 import { Slippers } from "../components/Models/Slippers";
 import { useLights } from "../context/LightContext";
 import Avtar from "../components/Models/Avtar";
 import Heart from "../components/Models/Heart";
-import { Text3D } from "@react-three/drei";
+import { io } from "socket.io-client";
 
+const socket = io("https://valentines-chat-app-1.onrender.com/");
 const Index = () => {
   const { lightsOn, setLightsOn } = useLights();
   const [text, setText] = useState("");
   const [hearts, setHearts] = useState([]);
-  const message = "";
+  const [message1, setMessage] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [socketId, setSocketId] = useState("");
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
+  useEffect(() => {
+    socket.on("connect", () => {
+      setSocketId(socket.id);
+      console.log("Connected with socket ID:", socket.id);
+    });
+
+    socket.on("receive-message", ({ msg, senderId }) => {
+      console.log("Received message:", msg, "from:", senderId, "my ID:", socketId);
+      if (senderId !== socketId) {
+        setMessages((prevMessages) => [...prevMessages, { text: msg, isUser: false }]);
+      }
+    });
+
+    return () => {
+      socket.off("receive-message");
+      socket.off("connect");
+    };
+  }, [socketId]);
+  
+  const sendMessage = () => {
+    if (message1.trim()) {
+      console.log("Sending message:", message1, "from:", socket.id);
+      socket.emit("send-message", { msg: message1, senderId: socket.id });
+
+      setMessages((prevMessages) => [...prevMessages, { text: message1, isUser: true }]);
+      setMessage("");
+    }
+  };
+
+  const message = "";
   useEffect(() => {
     let i = 0;
     const interval = setInterval(() => {
@@ -26,7 +60,6 @@ const Index = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Trigger hearts falling effect when lights turn on
   useEffect(() => {
     if (lightsOn) {
       const newHearts = [];
@@ -54,14 +87,136 @@ const Index = () => {
       setHearts([]); // Reset hearts when lights turn off
     }
   }, [lightsOn]);
-  
-  
-  
-  
-  
 
   return (
     <div className="h-[100vh] relative">
+      {/* Chatbox Toggle Button */}
+      {lightsOn && (
+  <>
+     
+      <button
+        onClick={() => setIsChatOpen(!isChatOpen)}
+        style={{
+          position: "fixed",
+          top: "20px",
+          right: "20px",
+          zIndex: 1000,
+          padding: "10px",
+          backgroundColor: "#ff69b4",
+          color: "#fff",
+          border: "none",
+          borderRadius: "50%",
+          cursor: "pointer",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        💬
+      </button>
+
+      {/* Chatbox */}
+      {isChatOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: "70px",
+            right: "20px",
+            width: "300px",
+            height: "400px",
+            backgroundColor: "#fff",
+            borderRadius: "10px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            display: "flex",
+            flexDirection: "column",
+            zIndex: 1000,
+          }}
+        >
+          {/* Chat Header */}
+          <div
+            style={{
+              padding: "10px",
+              backgroundColor: "#ff69b4",
+              color: "#fff",
+              borderTopLeftRadius: "10px",
+              borderTopRightRadius: "10px",
+              fontWeight: "bold",
+            }}
+          >
+            Chat
+          </div>
+
+          {/* Chat Messages */}
+          <div
+            style={{
+              flex: 1,
+              overflowY: "auto",
+              padding: "10px",
+            }}
+          >
+            {messages.map((msg, index) => (
+              <div
+                key={index}
+                style={{
+                  display: "flex",
+                  justifyContent: msg.isUser ? "flex-end" : "flex-start",
+                  marginBottom: "10px",
+                }}
+              >
+                <div
+                  style={{
+                    maxWidth: "70%",
+                    padding: "8px 12px",
+                    borderRadius: "10px",
+                    backgroundColor: msg.isUser ? "#ff69b4" : "#f0f0f0",
+                    color: msg.isUser ? "#fff" : "#000",
+                  }}
+                >
+                  {msg.text}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Input Field & Send Button */}
+          <div
+            style={{
+              display: "flex",
+              padding: "10px",
+              borderTop: "1px solid #f0f0f0",
+            }}
+          >
+            <input
+              type="text"
+              value={message1}
+              onChange={(e) => setMessage(e.target.value)}
+              style={{
+                flex: 1,
+                padding: "8px",
+                border: "1px solid #f0f0f0",
+                borderRadius: "5px",
+                marginRight: "10px",
+              }}
+              placeholder="Type a message..."
+            />
+            <button
+              onClick={sendMessage}
+              style={{
+                padding: "8px 12px",
+                backgroundColor: "#ff69b4",
+                color: "#fff",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      )}
+      </>
+      )}
+
+      {/* Initial Screen (Lights Off) */}
       {!lightsOn && (
         <div
           style={{
@@ -103,6 +258,7 @@ const Index = () => {
         </div>
       )}
 
+      {/* 3D Scene */}
       <Canvas style={{ width: "100%", height: "100%" }}>
         <PerspectiveCamera
           makeDefault
@@ -111,6 +267,7 @@ const Index = () => {
         />
         <OrbitControls enableZoom={false} enableRotate={false} enablePan={false} />
 
+        {/* Lights */}
         {lightsOn && (
           <>
             <ambientLight intensity={0.7} color="#ffd1dc" />
@@ -123,82 +280,81 @@ const Index = () => {
         <Slippers position={[0, 0.6, 0]} />
         <Avtar position={[-1.4, 0.6, 3]} />
         
-        {/* Render all the hearts */}
+        {/* Falling Hearts */}
         {hearts}
+
+        {/* Text if lightsOn */}
         {lightsOn && (
           <>
-          <Text3D 
-    font="./fonts/Irish Grover_Regular.json" 
-    position={[0.5, 0.66, 2]} 
-    scale={[0.2, 0.2, 0.25]}
-    rotation={[0, -0.1, 0]}
-    bevelEnabled={true}  // Optional, for beveled edges
-    bevelSize={0.05}     // Optional, controls the bevel size
-    bevelThickness={0.1} // Optional, controls the thickness of bevels
-  >
-    HAPPY
-    <meshStandardMaterial color="#ff69b4" roughness={0.2} metalness={1} />
-    <pointLight intensity={0.5} color={"yellow"}/>
-    <pointLight intensity={0.5} position={[2,0,0]} color={"yellow"}/>
-    <pointLight intensity={0.5} position={[3,0,0]} color={"yellow"}/>
-    <pointLight intensity={0.5} position={[4,0,0]} color={"yellow"}/>
-    <pointLight intensity={0.5} position={[5,0,0]} color={"yellow"}/>
-  </Text3D>
-  <Text3D 
-    font="./fonts/Irish Grover_Regular.json" 
-    position={[0.5, 0.66, 2.6]} 
-    scale={[0.2, 0.2, 0.25]}
-    rotation={[0, -0.1, 0]}
-    bevelEnabled={true}  // Optional, for beveled edges
-    bevelSize={0.05}     // Optional, controls the bevel size
-    bevelThickness={0.1} // Optional, controls the thickness of bevels
-  >
-    VALENTINES
-    <meshStandardMaterial color="#f033ff" roughness={0.2} metalness={1} />
-    <pointLight intensity={0.5} color={"red"} />
-    <pointLight intensity={0.5} color={"yellow"}/>
-    <pointLight intensity={0.5} position={[2,0,0]} color={"red"}/>
-    <pointLight intensity={0.5} position={[3,0,0]} color={"red"}/>
-    <pointLight intensity={0.5} position={[4,0,0]} color={"red"}/>
-    <pointLight intensity={0.5} position={[5,0,0]} color={"red"}/>
-    <pointLight intensity={1} position={[8,0,0]} color={"red"}/>
-  </Text3D>
-  <Text3D 
-    font="./fonts/Irish Grover_Regular.json" 
-    position={[0.1, 0.66, 3.1]} 
-    scale={[0.2, 0.2, 0.25]}
-    rotation={[0, -0.1, 0]}
-    bevelEnabled={true}  // Optional, for beveled edges
-    bevelSize={0.05}     // Optional, controls the bevel size
-    bevelThickness={0.1} // Optional, controls the thickness of bevels
-  >
-    DAY
-    <meshStandardMaterial color="#ff69b4" roughness={0.2} metalness={1} />
-    <pointLight intensity={0.5} color={"blue"}/>
-    <pointLight intensity={0.5} position={[2,0,0]} color={"blue"}/>
-    <pointLight intensity={0.5} position={[3,0,0]} color={"blue"}/>
-    <pointLight intensity={0.5} position={[4,0,0]} color={"blue"}/>
-  </Text3D>
-  <Text3D 
-    font="./fonts/Irish Grover_Regular.json" 
-    position={[0.3, 0.66, 3.6]} 
-    scale={[0.2, 0.2, 0.25]}
-    rotation={[0, -0.1, 0]}
-    bevelEnabled={true}  // Optional, for beveled edges
-    bevelSize={0.05}     // Optional, controls the bevel size
-    bevelThickness={0.1} // Optional, controls the thickness of bevels
-  >
-    SAHII
-    <meshStandardMaterial color="#ff69b4" roughness={0.2} metalness={1} />
-    <pointLight intensity={0.5} color={"yellow"}/>
-    <pointLight intensity={0.5} position={[2,0,0]} color={"yellow"}/>
-    <pointLight intensity={0.5} position={[3,0,0]} color={"yellow"}/>
-    <pointLight intensity={0.5} position={[4,0,0]} color={"yellow"}/>
-  </Text3D>
+            <Text3D
+              font="./fonts/Irish Grover_Regular.json"
+              position={[0.5, 0.66, 2]}
+              scale={[0.2, 0.2, 0.25]}
+              rotation={[0, -0.1, 0]}
+              bevelEnabled={true}
+              bevelSize={0.05}
+              bevelThickness={0.1}
+            >
+              HAPPY
+              <meshStandardMaterial color="#ff69b4" roughness={0.2} metalness={1} />
+              <pointLight intensity={0.5} color={"yellow"} />
+              <pointLight intensity={0.5} position={[2, 0, 0]} color={"yellow"} />
+              <pointLight intensity={0.5} position={[3, 0, 0]} color={"yellow"} />
+              <pointLight intensity={0.5} position={[4, 0, 0]} color={"yellow"} />
+              <pointLight intensity={0.5} position={[5, 0, 0]} color={"yellow"} />
+            </Text3D>
+            <Text3D
+              font="./fonts/Irish Grover_Regular.json"
+              position={[0.5, 0.66, 2.6]}
+              scale={[0.2, 0.2, 0.25]}
+              rotation={[0, -0.1, 0]}
+              bevelEnabled={true}
+              bevelSize={0.05}
+              bevelThickness={0.1}
+            >
+              VALENTINES
+              <meshStandardMaterial color="#f033ff" roughness={0.2} metalness={1} />
+              <pointLight intensity={0.5} color={"red"} />
+              <pointLight intensity={0.5} color={"yellow"} />
+              <pointLight intensity={0.5} position={[2, 0, 0]} color={"red"} />
+              <pointLight intensity={0.5} position={[3, 0, 0]} color={"red"} />
+              <pointLight intensity={0.5} position={[4, 0, 0]} color={"red"} />
+              <pointLight intensity={1} position={[8, 0, 0]} color={"red"} />
+            </Text3D>
+            <Text3D
+              font="./fonts/Irish Grover_Regular.json"
+              position={[0.1, 0.66, 3.1]}
+              scale={[0.2, 0.2, 0.25]}
+              rotation={[0, -0.1, 0]}
+              bevelEnabled={true}
+              bevelSize={0.05}
+              bevelThickness={0.1}
+            >
+              DAY
+              <meshStandardMaterial color="#ff69b4" roughness={0.2} metalness={1} />
+              <pointLight intensity={0.5} color={"blue"} />
+              <pointLight intensity={0.5} position={[2, 0, 0]} color={"blue"} />
+              <pointLight intensity={0.5} position={[3, 0, 0]} color={"blue"} />
+              <pointLight intensity={0.5} position={[4, 0, 0]} color={"blue"} />
+            </Text3D>
+            <Text3D
+              font="./fonts/Irish Grover_Regular.json"
+              position={[0.3, 0.66, 3.6]}
+              scale={[0.2, 0.2, 0.25]}
+              rotation={[0, -0.1, 0]}
+              bevelEnabled={true}
+              bevelSize={0.05}
+              bevelThickness={0.1}
+            >
+              SAHII
+              <meshStandardMaterial color="#ff69b4" roughness={0.2} metalness={1} />
+              <pointLight intensity={0.5} color={"yellow"} />
+              <pointLight intensity={0.5} position={[2, 0, 0]} color={"yellow"} />
+              <pointLight intensity={0.5} position={[3, 0, 0]} color={"yellow"} />
+              <pointLight intensity={0.5} position={[4, 0, 0]} color={"yellow"} />
+            </Text3D>
           </>
-  
-)}
-
+        )}
 
         <ContactShadows />
       </Canvas>
