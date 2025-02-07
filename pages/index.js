@@ -39,8 +39,8 @@ const Index = () => {
   const sendMessage = async () => {
     if (message1.trim()) {
       // Extract query if message starts with "/ask"
-      if (message1.startsWith("/ask")) {
-        const query = message1.replace("/ask", "").trim();
+      if (message1.startsWith("/ai")) {
+        const query = message1.replace("/ai", "").trim();
   
         if (!query) {
           console.error("Query is required after /ask!");
