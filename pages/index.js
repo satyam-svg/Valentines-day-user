@@ -6,6 +6,7 @@ import { useLights } from "../context/LightContext";
 import Avtar from "../components/Models/Avtar";
 import Heart from "../components/Models/Heart";
 import { io } from "socket.io-client";
+import heartAnimation from "/emojis/heart.json";
 
 const socket = io("https://valentines-chat-app-1.onrender.com/");
 const Index = () => {
@@ -123,7 +124,7 @@ const Index = () => {
       const newHearts = [];
       
       const createHearts = async () => {
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 10; i++) {
           await new Promise((resolve) => setTimeout(resolve, i * 200)); // Delay for each heart
           setHearts((prevHearts) => [
             ...prevHearts,
@@ -329,8 +330,8 @@ const Index = () => {
         {lightsOn && (
           <>
             <ambientLight intensity={0.7} color="#ffd1dc" />
-            <directionalLight position={[2, 5, 5]} intensity={1.2} color="#f8c291" castShadow />
-            <pointLight position={[-3, 2, -4]} intensity={0.6} color="#ffb6c1" />
+            <directionalLight position={[2, 5, 5]} intensity={1.2} color="#f8c291" castShadow={false} />
+            <pointLight position={[-3, 2, -4]} intensity={0.6} color="#ffb6c1"  castShadow={false}/>
             <spotLight position={[0, 5, 2]} intensity={0.8} angle={0.3} penumbra={1} color="#ffe4e1" />
           </>
         )}
@@ -355,11 +356,7 @@ const Index = () => {
             >
               HAPPY
               <meshStandardMaterial color="#ff69b4" roughness={0.2} metalness={1} />
-              <pointLight intensity={0.5} color={"yellow"} />
-              <pointLight intensity={0.5} position={[2, 0, 0]} color={"yellow"} />
-              <pointLight intensity={0.5} position={[3, 0, 0]} color={"yellow"} />
-              <pointLight intensity={0.5} position={[4, 0, 0]} color={"yellow"} />
-              <pointLight intensity={0.5} position={[5, 0, 0]} color={"yellow"} />
+              
             </Text3D>
             <Text3D
               font="./fonts/Irish Grover_Regular.json"
@@ -372,12 +369,12 @@ const Index = () => {
             >
               VALENTINES
               <meshStandardMaterial color="#f033ff" roughness={0.2} metalness={1} />
-              <pointLight intensity={0.5} color={"red"} />
-              <pointLight intensity={0.5} color={"yellow"} />
-              <pointLight intensity={0.5} position={[2, 0, 0]} color={"red"} />
-              <pointLight intensity={0.5} position={[3, 0, 0]} color={"red"} />
-              <pointLight intensity={0.5} position={[4, 0, 0]} color={"red"} />
-              <pointLight intensity={1} position={[8, 0, 0]} color={"red"} />
+              <pointLight intensity={0.5} color={"red"}  castShadow={false}/>
+              <pointLight intensity={0.5} color={"yellow"} castShadow={false}/>
+              <pointLight intensity={0.5} position={[2, 0, 0]} color={"red"} castShadow={false}/>
+              <pointLight intensity={0.5} position={[3, 0, 0]} color={"blue"} castShadow={false}/>
+              <pointLight intensity={0.5} position={[4, 0, 0]} color={"red"} castShadow={false}/>
+              <pointLight intensity={1} position={[8, 0, 0]} color={"white"} castShadow={false}/>
             </Text3D>
             <Text3D
               font="./fonts/Irish Grover_Regular.json"
@@ -390,10 +387,7 @@ const Index = () => {
             >
               DAY
               <meshStandardMaterial color="#ff69b4" roughness={0.2} metalness={1} />
-              <pointLight intensity={0.5} color={"blue"} />
-              <pointLight intensity={0.5} position={[2, 0, 0]} color={"blue"} />
-              <pointLight intensity={0.5} position={[3, 0, 0]} color={"blue"} />
-              <pointLight intensity={0.5} position={[4, 0, 0]} color={"blue"} />
+              
             </Text3D>
             <Text3D
               font="./fonts/Irish Grover_Regular.json"
@@ -406,10 +400,10 @@ const Index = () => {
             >
               SAHII
               <meshStandardMaterial color="#ff69b4" roughness={0.2} metalness={1} />
-              <pointLight intensity={0.5} color={"yellow"} />
-              <pointLight intensity={0.5} position={[2, 0, 0]} color={"yellow"} />
-              <pointLight intensity={0.5} position={[3, 0, 0]} color={"yellow"} />
-              <pointLight intensity={0.5} position={[4, 0, 0]} color={"yellow"} />
+              <pointLight intensity={0.5} color={"yellow"} castShadow={false}/>
+              <pointLight intensity={0.5} position={[2, 0, 0]} color={"blue"} castShadow={false}/>
+              <pointLight intensity={0.5} position={[3, 0, 0]} color={"red"} castShadow={false}/>
+              <pointLight intensity={0.5} position={[4, 0, 0]} color={"yellow"} castShadow={false}/>
             </Text3D>
           </>
         )}
