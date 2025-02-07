@@ -7,6 +7,8 @@ import Avtar from "../components/Models/Avtar";
 import Heart from "../components/Models/Heart";
 import { io } from "socket.io-client";
 import heartAnimation from "/emojis/heart.json";
+import Picker from "@emoji-mart/react";
+import data from "@emoji-mart/data";
 
 const socket = io("https://valentines-chat-app-1.onrender.com/");
 const Index = () => {
@@ -17,6 +19,7 @@ const Index = () => {
   const [messages, setMessages] = useState([]);
   const [socketId, setSocketId] = useState("");
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -147,133 +150,161 @@ const Index = () => {
     }
   }, [lightsOn]);
 
+  const handleEmojiSelect = (emoji) => {
+    setMessage((prevMessage) => prevMessage + emoji.native);
+    setShowEmojiPicker(false); // Hide the emoji picker after selection
+  };
+
   return (
     <div className="h-[100vh] relative">
       {/* Chatbox Toggle Button */}
       {lightsOn && (
   <>
-     
-      <button
-        onClick={() => setIsChatOpen(!isChatOpen)}
+    {/* Chat Toggle Button */}
+    <button
+      onClick={() => setIsChatOpen(!isChatOpen)}
+      style={{
+        position: "fixed",
+        top: "20px",
+        right: "20px",
+        zIndex: 1000,
+        padding: "10px",
+        backgroundColor: "#ff69b4",
+        color: "#fff",
+        border: "none",
+        borderRadius: "50%",
+        cursor: "pointer",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+      }}
+    >
+      💬
+    </button>
+
+    {/* Chatbox */}
+    {isChatOpen && (
+      <div
         style={{
           position: "fixed",
-          top: "20px",
+          top: "70px",
           right: "20px",
-          zIndex: 1000,
-          padding: "10px",
-          backgroundColor: "#ff69b4",
-          color: "#fff",
-          border: "none",
-          borderRadius: "50%",
-          cursor: "pointer",
+          width: "300px",
+          height: "400px",
+          backgroundColor: "#fff",
+          borderRadius: "10px",
           boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          display: "flex",
+          flexDirection: "column",
+          zIndex: 1000,
         }}
       >
-        💬
-      </button>
-
-      {/* Chatbox */}
-      {isChatOpen && (
+        {/* Chat Header */}
         <div
           style={{
-            position: "fixed",
-            top: "70px",
-            right: "20px",
-            width: "300px",
-            height: "400px",
-            backgroundColor: "#fff",
-            borderRadius: "10px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            display: "flex",
-            flexDirection: "column",
-            zIndex: 1000,
+            padding: "10px",
+            backgroundColor: "#ff69b4",
+            color: "#fff",
+            borderTopLeftRadius: "10px",
+            borderTopRightRadius: "10px",
+            fontWeight: "bold",
           }}
         >
-          {/* Chat Header */}
-          <div
-            style={{
-              padding: "10px",
-              backgroundColor: "#ff69b4",
-              color: "#fff",
-              borderTopLeftRadius: "10px",
-              borderTopRightRadius: "10px",
-              fontWeight: "bold",
-            }}
-          >
-            Chat
-          </div>
+          Chat
+        </div>
 
-          {/* Chat Messages */}
-          <div
-            style={{
-              flex: 1,
-              overflowY: "auto",
-              padding: "10px",
-            }}
-          >
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                style={{
-                  display: "flex",
-                  justifyContent: msg.isUser ? "flex-end" : "flex-start",
-                  marginBottom: "10px",
-                }}
-              >
-                <div
-                  style={{
-                    maxWidth: "70%",
-                    padding: "8px 12px",
-                    borderRadius: "10px",
-                    backgroundColor: msg.isUser ? "#ff69b4" : "#f0f0f0",
-                    color: msg.isUser ? "#fff" : "#000",
-                  }}
-                >
-                  {msg.text}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Input Field & Send Button */}
-          <div
-            style={{
-              display: "flex",
-              padding: "10px",
-              borderTop: "1px solid #f0f0f0",
-            }}
-          >
-            <input
-              type="text"
-              value={message1}
-              onChange={(e) => setMessage(e.target.value)}
+        {/* Chat Messages */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "10px",
+          }}
+        >
+          {messages.map((msg, index) => (
+            <div
+              key={index}
               style={{
-                flex: 1,
-                padding: "8px",
-                border: "1px solid #f0f0f0",
-                borderRadius: "5px",
-                marginRight: "10px",
-              }}
-              placeholder="Type a message..."
-            />
-            <button
-              onClick={sendMessage}
-              style={{
-                padding: "8px 12px",
-                backgroundColor: "#ff69b4",
-                color: "#fff",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
+                display: "flex",
+                justifyContent: msg.isUser ? "flex-end" : "flex-start",
+                marginBottom: "10px",
               }}
             >
-              Send
-            </button>
-          </div>
+              <div
+                style={{
+                  maxWidth: "70%",
+                  padding: "8px 12px",
+                  borderRadius: "10px",
+                  backgroundColor: msg.isUser ? "#ff69b4" : "#f0f0f0",
+                  color: msg.isUser ? "#fff" : "#000",
+                }}
+              >
+                {msg.text}
+              </div>
+            </div>
+          ))}
         </div>
-      )}
-      </>
-      )}
+
+        {/* Input Field */}
+        <div
+          style={{
+            display: "flex",
+            padding: "10px",
+            borderTop: "1px solid #f0f0f0",
+            gap: "8px", // Added gap for better spacing
+          }}
+        >
+          {/* Emoji Button */}
+          <button
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            style={{
+              padding: "8px",
+              backgroundColor: "#ff69b4",
+              color: "#fff",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+          >
+            😀
+          </button>
+
+          {/* Input Field */}
+          <input
+            type="text"
+            value={message1}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                sendMessage(); // Send message when Enter is pressed
+              }
+            }}
+            style={{
+              flex: 1,
+              padding: "8px",
+              border: "1px solid #f0f0f0",
+              borderRadius: "5px",
+              outline: "none",
+            }}
+            placeholder="Type a message"
+          />
+        </div>
+
+        {/* Emoji Picker */}
+        {showEmojiPicker && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: "60px",
+              right: "10px",
+              zIndex: 1001,
+            }}
+          >
+            <Picker data={data} onEmojiSelect={handleEmojiSelect} />
+          </div>
+        )}
+      </div>
+    )}
+  </>
+)}
 
       {/* Initial Screen (Lights Off) */}
       {!lightsOn && (
