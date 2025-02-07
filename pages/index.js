@@ -38,7 +38,7 @@ const Index = () => {
   
   const sendMessage = async () => {
     if (message1.trim()) {
-      // Check if the message starts with "/ask"
+      // Extract query if message starts with "/ask"
       if (message1.startsWith("/ask")) {
         const query = message1.replace("/ask", "").trim();
   
@@ -47,12 +47,20 @@ const Index = () => {
           return;
         }
   
-        // Immediately send user message & show "Typing..."
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { text: message1, isUser: true },
-          { text: "Typing...", isUser: false, isTyping: true }, // Show typing status
-        ]);
+        // 1️⃣ Show user's "/ask" message in chat
+        const userMessage = { text: message1, isUser: true };
+        setMessages((prevMessages) => [...prevMessages, userMessage]);
+  
+        // 📡 Broadcast "/ask" message to other users
+        socket.emit("send-message", { msg: message1, senderId: socket.id });
+  
+        // 2️⃣ Show "Typing..." indicator
+        setTimeout(() => {
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            { text: "Typing...", isUser: false, isTyping: true },
+          ]);
+        }, 200);
   
         try {
           const response = await fetch("/api/gemini", {
@@ -68,15 +76,15 @@ const Index = () => {
             return;
           }
   
-          // Replace "Typing..." with actual AI response
+          // 3️⃣ Replace "Typing..." with AI response
           setMessages((prevMessages) =>
             prevMessages
               .filter((msg) => !msg.isTyping) // Remove "Typing..."
-              .concat({ text: data.reply, isUser: false }) // Add AI response
+              .concat({ text: data.reply, isUser: false })
           );
   
-          // Broadcast AI response
-          socket.emit("send-message", { msg: data.reply, senderId: socket.id });
+          // 📡 Broadcast AI response as well
+          socket.emit("send-message", { msg: data.reply, senderId: "bot" });
         } catch (error) {
           console.error("Error sending message to backend:", error);
         }
@@ -90,7 +98,7 @@ const Index = () => {
         ]);
       }
   
-      // Clear input field immediately
+      // Clear input field
       setMessage("");
     }
   };
