@@ -36,15 +36,65 @@ const Index = () => {
     };
   }, [socketId]);
   
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (message1.trim()) {
-      console.log("Sending message:", message1, "from:", socket.id);
-      socket.emit("send-message", { msg: message1, senderId: socket.id });
-
-      setMessages((prevMessages) => [...prevMessages, { text: message1, isUser: true }]);
+      // Check if the message starts with "/ask"
+      if (message1.startsWith("/ask")) {
+        const query = message1.replace("/ask", "").trim();
+  
+        if (!query) {
+          console.error("Query is required after /ask!");
+          return;
+        }
+  
+        // Immediately send user message & show "Typing..."
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { text: message1, isUser: true },
+          { text: "Typing...", isUser: false, isTyping: true }, // Show typing status
+        ]);
+  
+        try {
+          const response = await fetch("/api/gemini", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query }),
+          });
+  
+          const data = await response.json();
+  
+          if (!data.reply) {
+            console.error("Invalid response from API:", data);
+            return;
+          }
+  
+          // Replace "Typing..." with actual AI response
+          setMessages((prevMessages) =>
+            prevMessages
+              .filter((msg) => !msg.isTyping) // Remove "Typing..."
+              .concat({ text: data.reply, isUser: false }) // Add AI response
+          );
+  
+          // Broadcast AI response
+          socket.emit("send-message", { msg: data.reply, senderId: socket.id });
+        } catch (error) {
+          console.error("Error sending message to backend:", error);
+        }
+      } else {
+        // Normal message handling
+        socket.emit("send-message", { msg: message1, senderId: socket.id });
+  
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { text: message1, isUser: true },
+        ]);
+      }
+  
+      // Clear input field immediately
       setMessage("");
     }
   };
+  
 
   const message = "";
   useEffect(() => {
