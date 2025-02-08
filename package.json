@@ -25,7 +25,6 @@
     "node-fetch": "^3.3.2",
     "react": "^18",
     "react-dom": "^18",
-    "simplewebrtc": "^3.0.2",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "three": "^0.160.1"
