@@ -1,16 +1,16 @@
 import { ContactShadows, OrbitControls, PerspectiveCamera, Text3D } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useRef } from "react";
 import { Slippers } from "../components/Models/Slippers";
 import { useLights } from "../context/LightContext";
 import Avtar from "../components/Models/Avtar";
 import Heart from "../components/Models/Heart";
 import { io } from "socket.io-client";
-import heartAnimation from "/emojis/heart.json";
+
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 
-const socket = io("https://valentines-chat-app-1.onrender.com/");
+const socket = io("https://valentines-chat-app.onrender.com");
 const Index = () => {
   const { lightsOn, setLightsOn } = useLights();
   const [text, setText] = useState("");
@@ -20,6 +20,8 @@ const Index = () => {
   const [socketId, setSocketId] = useState("");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const emojiPickerRef = useRef(null);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -152,8 +154,30 @@ const Index = () => {
 
   const handleEmojiSelect = (emoji) => {
     setMessage((prevMessage) => prevMessage + emoji.native);
-    setShowEmojiPicker(false); // Hide the emoji picker after selection
+    // Do not close the emoji picker here
   };
+
+  const closeEmojiPicker = () => {
+    setShowEmojiPicker(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    if (showEmojiPicker) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojiPicker]);
 
   return (
     <div className="h-[100vh] relative">
@@ -291,6 +315,7 @@ const Index = () => {
         {/* Emoji Picker */}
         {showEmojiPicker && (
           <div
+          ref={emojiPickerRef}
             style={{
               position: "absolute",
               bottom: "60px",
