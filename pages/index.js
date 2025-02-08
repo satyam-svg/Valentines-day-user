@@ -20,6 +20,16 @@ const Index = () => {
   const [socketId, setSocketId] = useState("");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const localVideoRef = useRef(null);
+  const remoteVideoRef = useRef(null);
+  const peerConnection = useRef(null);
+  const [isCallActive, setIsCallActive] = useState(false);
+  const [incomingCall, setIncomingCall] = useState(false);
+  const [offerData, setOfferData] = useState(null);
+  const [callerId, setCallerId] = useState(null);
+  const [activeUsers, setActiveUsers] = useState([]);
+  const [callEndedMessage, setCallEndedMessage] = useState(null);
+  
 
   const emojiPickerRef = useRef(null);
 
@@ -36,11 +46,167 @@ const Index = () => {
       }
     });
 
+    socket.on("offer", async ({ offer, from }) => {
+      setIncomingCall(true);
+      setOfferData(offer);
+      setCallerId(from);
+    });
+
+    socket.on("answer", async (answer) => {
+      if (peerConnection.current) {
+        await peerConnection.current.setRemoteDescription(answer);
+      }
+    });
+
+    socket.on("candidate", async (candidate) => {
+      if (peerConnection.current) {
+        await peerConnection.current.addIceCandidate(candidate);
+      }
+    });
+
+    socket.on("activeUsers", (users) => {
+      setActiveUsers(users);
+    });
+
+    // Listen for "endCall" event (Call ends for all users)
+    const endCall = () => {
+      socket.emit("endCall"); // Notify server to end call for everyone
+      handleEndCall(); // Local cleanup
+      setCallEndedMessage("Call ended by you");
+      setTimeout(() => setCallEndedMessage(null), 3000);
+    };
+
+
     return () => {
+      socket.off("offer");
+      socket.off("answer");
+      socket.off("candidate");
+      socket.off("activeUsers");
+      socket.off("endCall");
       socket.off("receive-message");
       socket.off("connect");
     };
   }, [socketId]);
+
+
+  useEffect(() => {
+    socket.on("callEnded", ({ reason }) => {
+      handleEndCall();
+      setCallEndedMessage(reason || "Call ended by other user");
+      setTimeout(() => setCallEndedMessage(null), 3000);
+    });
+
+    return () => {
+      socket.off("callEnded");
+    };
+  }, []);
+
+
+  const createPeerConnection = () => {
+    const pc = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit("candidate", { candidate: event.candidate, to: callerId });
+      }
+    };
+
+    pc.ontrack = (event) => {
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = event.streams[0];
+      }
+    };
+
+    return pc;
+  };
+
+
+  const startCall = async () => {
+    setIsCallActive(true);
+    peerConnection.current = createPeerConnection();
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+    }
+    stream.getTracks().forEach((track) => peerConnection.current.addTrack(track, stream));
+
+    const offer = await peerConnection.current.createOffer();
+    await peerConnection.current.setLocalDescription(offer);
+
+    socket.emit("broadcastOffer", offer);
+  };
+
+
+  const acceptCall = async () => {
+    setIncomingCall(false);
+    setIsCallActive(true);
+
+    peerConnection.current = createPeerConnection();
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+    }
+    stream.getTracks().forEach((track) => peerConnection.current.addTrack(track, stream));
+
+    await peerConnection.current.setRemoteDescription(offerData);
+    const answer = await peerConnection.current.createAnswer();
+    await peerConnection.current.setLocalDescription(answer);
+
+    socket.emit("answer", { answer, to: callerId });
+  };
+
+  const handleEndCall = () => {
+    setIsCallActive(false);
+    setIncomingCall(false);
+    if (peerConnection.current) {
+      peerConnection.current.close();
+      peerConnection.current = null;
+    }
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject?.getTracks().forEach((track) => track.stop());
+      localVideoRef.current.srcObject = null;
+    }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
+    }
+  };
+
+  // When any user ends call, notify all users
+  const endCall = () => {
+    socket.emit("endCall"); // Notify all users
+    handleEndCall(); // Stop call for self
+  };
+
+
+  const CallEndedPopup = () => (
+    <div style={{
+      position: 'fixed',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      padding: '20px',
+      backgroundColor: 'rgba(255, 105, 180, 0.9)',
+      color: 'white',
+      borderRadius: '10px',
+      zIndex: 1003,
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      textAlign: 'center',
+      animation: 'fadeInOut 3s forwards'
+    }}>
+      <h3>💔 Call Ended</h3>
+      <p>{callEndedMessage}</p>
+      <style>{`
+        @keyframes fadeInOut {
+          0% { opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
   
   const sendMessage = async () => {
     if (message1.trim()) {
@@ -183,153 +349,268 @@ const Index = () => {
     <div className="h-[100vh] relative">
       {/* Chatbox Toggle Button */}
       {lightsOn && (
-  <>
-    {/* Chat Toggle Button */}
-    <button
-      onClick={() => setIsChatOpen(!isChatOpen)}
-      style={{
-        position: "fixed",
-        top: "20px",
-        right: "20px",
-        zIndex: 1000,
-        padding: "10px",
-        backgroundColor: "#ff69b4",
-        color: "#fff",
-        border: "none",
-        borderRadius: "50%",
-        cursor: "pointer",
-        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-      }}
-    >
-      💬
-    </button>
-
-    {/* Chatbox */}
-    {isChatOpen && (
-      <div
-        style={{
-          position: "fixed",
-          top: "70px",
-          right: "20px",
-          width: "300px",
-          height: "400px",
-          backgroundColor: "#fff",
-          borderRadius: "10px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          display: "flex",
-          flexDirection: "column",
-          zIndex: 1000,
-        }}
-      >
-        {/* Chat Header */}
-        <div
-          style={{
-            padding: "10px",
-            backgroundColor: "#ff69b4",
-            color: "#fff",
-            borderTopLeftRadius: "10px",
-            borderTopRightRadius: "10px",
-            fontWeight: "bold",
-          }}
-        >
-          Chat
-        </div>
-
-        {/* Chat Messages */}
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            padding: "10px",
-          }}
-        >
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              style={{
-                display: "flex",
-                justifyContent: msg.isUser ? "flex-end" : "flex-start",
-                marginBottom: "10px",
-              }}
-            >
-              <div
-                style={{
-                  maxWidth: "70%",
-                  padding: "8px 12px",
-                  borderRadius: "10px",
-                  backgroundColor: msg.isUser ? "#ff69b4" : "#f0f0f0",
-                  color: msg.isUser ? "#fff" : "#000",
-                }}
-              >
-                {msg.text}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Input Field */}
-        <div
-          style={{
-            display: "flex",
-            padding: "10px",
-            borderTop: "1px solid #f0f0f0",
-            gap: "8px", // Added gap for better spacing
-          }}
-        >
-          {/* Emoji Button */}
+        <>
+        {callEndedMessage && <CallEndedPopup />}
+          {/* Chat Toggle Button */}
           <button
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            onClick={() => setIsChatOpen(!isChatOpen)}
             style={{
-              padding: "8px",
+              position: "fixed",
+              top: "20px",
+              right: "20px",
+              zIndex: 1000,
+              padding: "10px",
               backgroundColor: "#ff69b4",
               color: "#fff",
               border: "none",
-              borderRadius: "5px",
+              borderRadius: "50%",
               cursor: "pointer",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
             }}
           >
-            😀
+            💬
           </button>
 
-          {/* Input Field */}
-          <input
-            type="text"
-            value={message1}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                sendMessage(); // Send message when Enter is pressed
-              }
-            }}
-            style={{
-              flex: 1,
-              padding: "8px",
-              border: "1px solid #f0f0f0",
-              borderRadius: "5px",
-              outline: "none",
-            }}
-            placeholder="Type a message"
-          />
-        </div>
+          {/* Chat Container */}
+          {isChatOpen && (
+            <div
+              style={{
+                position: "fixed",
+                top: "70px",
+                right: "20px",
+                width: "300px",
+                height: "400px",
+                backgroundColor: "#fff",
+                borderRadius: "10px",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                display: "flex",
+                flexDirection: "column",
+                zIndex: 1000,
+              }}
+            >
+              {/* Chat Header with Call Controls */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "10px",
+                  backgroundColor: "#ff69b4",
+                  color: "#fff",
+                  borderTopLeftRadius: "10px",
+                  borderTopRightRadius: "10px",
+                  fontWeight: "bold",
+                }}
+              >
+                <div>Chat</div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  {!isCallActive && (
+                    <button
+                      onClick={startCall}
+                      style={{
+                        padding: "6px",
+                        background: "#ff69b4",
+                        border: "2px solid white",
+                        borderRadius: "50%",
+                        cursor: "pointer",
+                        minWidth: "32px",
+                        minHeight: "32px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}
+                    >
+                      📞
+                    </button>
+                  )}
+                  {isCallActive && (
+                    <button
+                      onClick={endCall}
+                      style={{
+                        padding: "6px",
+                        background: "#ff4444",
+                        border: "2px solid white",
+                        borderRadius: "50%",
+                        cursor: "pointer",
+                        minWidth: "32px",
+                        minHeight: "32px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}
+                    >
+                      🚫
+                    </button>
+                  )}
+                </div>
+              </div>
 
-        {/* Emoji Picker */}
-        {showEmojiPicker && (
-          <div
-          ref={emojiPickerRef}
-            style={{
-              position: "absolute",
-              bottom: "60px",
-              right: "10px",
-              zIndex: 1001,
-            }}
-          >
-            <Picker data={data} onEmojiSelect={handleEmojiSelect} />
-          </div>
-        )}
-      </div>
-    )}
-  </>
-)}
+              {/* Chat Messages Area */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "10px" }}>
+                {/* Incoming Call Alert */}
+                {incomingCall && (
+                  <div style={{
+                    padding: "10px",
+                    backgroundColor: "#ffe6f0",
+                    borderRadius: "8px",
+                    marginBottom: "10px",
+                    textAlign: "center"
+                  }}>
+                    <p style={{ margin: "0 0 10px 0" }}>Incoming Call... 📞</p>
+                    <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+                      <button
+                        onClick={acceptCall}
+                        style={{
+                          padding: "8px 16px",
+                          background: "#4CAF50",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer"
+                        }}
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => setIncomingCall(false)}
+                        style={{
+                          padding: "8px 16px",
+                          background: "#ff4444",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer"
+                        }}
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Messages List */}
+                {messages.map((msg, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      justifyContent: msg.isUser ? "flex-end" : "flex-start",
+                      marginBottom: "10px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        maxWidth: "70%",
+                        padding: "8px 12px",
+                        borderRadius: "10px",
+                        backgroundColor: msg.isUser ? "#ff69b4" : "#f0f0f0",
+                        color: msg.isUser ? "#fff" : "#000",
+                      }}
+                    >
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Message Input Area */}
+              <div
+                style={{
+                  display: "flex",
+                  padding: "10px",
+                  borderTop: "1px solid #f0f0f0",
+                  gap: "8px",
+                }}
+              >
+                <button
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  style={{
+                    padding: "8px",
+                    backgroundColor: "#ff69b4",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  😀
+                </button>
+                <input
+                  type="text"
+                  value={message1}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                  style={{
+                    flex: 1,
+                    padding: "8px",
+                    border: "1px solid #f0f0f0",
+                    borderRadius: "5px",
+                    outline: "none",
+                  }}
+                  placeholder="Type a message"
+                />
+              </div>
+
+              {/* Emoji Picker */}
+              {showEmojiPicker && (
+                <div
+                  ref={emojiPickerRef}
+                  style={{
+                    position: "absolute",
+                    bottom: "60px",
+                    right: "10px",
+                    zIndex: 1001,
+                  }}
+                >
+                  <Picker data={data} onEmojiSelect={handleEmojiSelect} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Video Call Containers */}
+          {(isCallActive || incomingCall) && (
+            <div style={{
+              position: "fixed",
+              bottom: "20px",
+              right: "20px",
+              display: "flex",
+              gap: "20px",
+              zIndex: 1002
+            }}>
+              <div style={{
+                width: "200px",
+                height: "150px",
+                backgroundColor: "black",
+                borderRadius: "8px",
+                overflow: "hidden",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)"
+              }}>
+                <video 
+                  ref={localVideoRef} 
+                  autoPlay 
+                  muted 
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              </div>
+              <div style={{
+                width: "200px",
+                height: "150px",
+                backgroundColor: "black",
+                borderRadius: "8px",
+                overflow: "hidden",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)"
+              }}>
+                <video 
+                  ref={remoteVideoRef} 
+                  autoPlay 
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Initial Screen (Lights Off) */}
       {!lightsOn && (
