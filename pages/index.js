@@ -11,6 +11,8 @@ import Girl from "../components/Models/Girl";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 
+
+
 const socket = io("https://valentines-chat-app.onrender.com");
 const Index = () => {
   const { lightsOn, setLightsOn } = useLights();
@@ -30,6 +32,8 @@ const Index = () => {
   const [callerId, setCallerId] = useState(null);
   const [activeUsers, setActiveUsers] = useState([]);
   const [callEndedMessage, setCallEndedMessage] = useState(null);
+
+  const audioRef = useRef(null);
   
 
   const emojiPickerRef = useRef(null);
@@ -349,6 +353,30 @@ const Index = () => {
     } else {
       setHearts([]); // Reset hearts when lights turn off
     }
+  }, [lightsOn]);
+
+  useEffect(() => {
+    if (lightsOn) {
+      // गाना लोड करें और प्ले करें
+      audioRef.current = new Audio('/Music/anuv.mp3');
+      audioRef.current.play().catch(error => {
+        console.error('Audio play failed:', error);
+      });
+    } else {
+      // गाना बंद करें
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    }
+  
+    // क्लीनअप फंक्शन
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
   }, [lightsOn]);
 
   const handleEmojiSelect = (emoji) => {
