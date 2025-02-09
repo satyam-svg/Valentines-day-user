@@ -141,11 +141,13 @@ const Index = () => {
   const startCall = async () => {
     setIsCallActive(true);
     peerConnection.current = createPeerConnection();
+    socket.emit("join-room", "valentines-room");
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = stream;
     }
     stream.getTracks().forEach((track) => peerConnection.current.addTrack(track, stream));
+    peerConnection.current.addTransceiver('video', { direction: 'recvonly' });
 
     const offer = await peerConnection.current.createOffer();
     await peerConnection.current.setLocalDescription(offer);
@@ -181,6 +183,13 @@ const Index = () => {
       socket.emit("answer", { answer, to: callerId }); // Ensure callerId is correct
     } catch (error) {
       console.error('Error accepting call:', error);
+    }
+  };
+
+  pc.onconnectionstatechange = (event) => {
+    console.log('Connection state:', pc.connectionState);
+    if (pc.connectionState === 'disconnected') {
+      handleEndCall();
     }
   };
 
