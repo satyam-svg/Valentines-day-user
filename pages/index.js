@@ -186,12 +186,7 @@ const Index = () => {
     }
   };
 
-  pc.onconnectionstatechange = (event) => {
-    console.log('Connection state:', pc.connectionState);
-    if (pc.connectionState === 'disconnected') {
-      handleEndCall();
-    }
-  };
+  
 
   const handleEndCall = () => {
     setIsCallActive(false);
