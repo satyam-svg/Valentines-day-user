@@ -53,8 +53,14 @@ const Index = () => {
     });
 
     socket.on("answer", async (answer) => {
+      console.log('Answer received:', answer);
       if (peerConnection.current) {
-        await peerConnection.current.setRemoteDescription(answer);
+        try {
+          await peerConnection.current.setRemoteDescription(answer);
+          console.log('Remote description set successfully on caller side');
+        } catch (error) {
+          console.error('Error setting remote description (caller):', error);
+        }
       }
     });
 
@@ -106,22 +112,31 @@ const Index = () => {
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
-
+  
     pc.onicecandidate = (event) => {
       if (event.candidate) {
+        console.log('Sending ICE candidate:', event.candidate);
         socket.emit("candidate", { candidate: event.candidate, to: callerId });
       }
     };
 
+    const remoteStream = new MediaStream();
+
     pc.ontrack = (event) => {
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = event.streams[0];
+      console.log('Received track:', event.track);
+      event.streams.forEach(stream => {
+        stream.getTracks().forEach(track => {
+          remoteStream.addTrack(track); // Add tracks to the same stream
+        });
+      });
+      if (remoteVideoRef.current && !remoteVideoRef.current.srcObject) {
+        console.log('Setting remote video stream');
+        remoteVideoRef.current.srcObject = remoteStream;
       }
     };
-
+  
     return pc;
   };
-
 
   const startCall = async () => {
     setIsCallActive(true);
@@ -142,19 +157,31 @@ const Index = () => {
   const acceptCall = async () => {
     setIncomingCall(false);
     setIsCallActive(true);
-
-    peerConnection.current = createPeerConnection();
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = stream;
+  
+    try {
+      peerConnection.current = createPeerConnection();
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+      
+      // Add each track to the peer connection with the stream
+      stream.getTracks().forEach(track => {
+        peerConnection.current.addTrack(track, stream);
+      });
+  
+      await peerConnection.current.setRemoteDescription(offerData);
+      console.log('Remote description set for answer');
+      
+      const answer = await peerConnection.current.createAnswer();
+      await peerConnection.current.setLocalDescription(answer);
+      console.log('Sending answer:', answer);
+      
+      socket.emit("answer", { answer, to: callerId }); // Ensure callerId is correct
+    } catch (error) {
+      console.error('Error accepting call:', error);
     }
-    stream.getTracks().forEach((track) => peerConnection.current.addTrack(track, stream));
-
-    await peerConnection.current.setRemoteDescription(offerData);
-    const answer = await peerConnection.current.createAnswer();
-    await peerConnection.current.setLocalDescription(answer);
-
-    socket.emit("answer", { answer, to: callerId });
   };
 
   const handleEndCall = () => {
