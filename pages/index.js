@@ -111,11 +111,7 @@ const Index = () => {
   const createPeerConnection = () => {
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-      { 
-        urls: "turn:turn.metered.ca:80",   // TURN server
-        username: "a14fd452bd32ceafc6ee0f8a",
-        credential: "jDRqhv3AcOL/RVRn"
-      }
+  
     });
   
     pc.onicecandidate = (event) => {
