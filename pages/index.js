@@ -6,6 +6,7 @@ import { useLights } from "../context/LightContext";
 import Avtar from "../components/Models/Avtar";
 import Heart from "../components/Models/Heart";
 import { io } from "socket.io-client";
+import Girl from "../components/Models/Girl";
 
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
@@ -111,11 +112,7 @@ const Index = () => {
   const createPeerConnection = () => {
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-      { 
-        urls: "turn:turn.metered.ca:80",   // TURN server
-        username: "a14fd452bd32ceafc6ee0f8a",
-        credential: "jDRqhv3AcOL/RVRn"
-      }
+      
     });
   
     pc.onicecandidate = (event) => {
@@ -711,6 +708,8 @@ const Index = () => {
 
         <Slippers position={[0, 0.6, 0]} />
         <Avtar position={[-1.4, 0.6, 3]} />
+        <Girl position={[-0.8, 0.6, 3.3]} />
+
         
         {/* Falling Hearts */}
         {hearts}
