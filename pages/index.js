@@ -147,7 +147,7 @@ const Index = () => {
       localVideoRef.current.srcObject = stream;
     }
     stream.getTracks().forEach((track) => peerConnection.current.addTrack(track, stream));
-    peerConnection.current.addTransceiver('video', { direction: 'recvonly' });
+    // peerConnection.current.addTransceiver('video', { direction: 'recvonly' });
 
     const offer = await peerConnection.current.createOffer();
     await peerConnection.current.setLocalDescription(offer);
