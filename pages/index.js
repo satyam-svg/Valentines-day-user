@@ -11,6 +11,7 @@ import Girl from "../components/Models/Girl";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 import Gaming from "../components/Models/Gaming";
+import Typing from "../components/Models/Typing";
 
 
 const socket = io("https://valentines-chat-app.onrender.com");
@@ -365,7 +366,15 @@ const Index = () => {
       audioRef.current.play().catch((error) => {
         console.error('Audio play failed:', error);
       });
-    } else {
+    } else if(lightsOn && singleMode){
+      if (!audioRef.current) {
+        audioRef.current = new Audio('/Music/karan.mp3');
+      }
+
+      audioRef.current.play().catch((error) => {
+        console.error('Audio play failed:', error);
+      });
+    }else {
       // गाना बंद करें
       if (audioRef.current) {
         audioRef.current.pause();
@@ -373,7 +382,7 @@ const Index = () => {
       }
     }
   
-    // क्लीनअप फंक्शन
+    
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -849,7 +858,9 @@ const Index = () => {
              rotation={[-1, -0.2, -0.01]}
            />
   <OrbitControls enableZoom={false} enableRotate={false} enablePan={false} />
+    
     <Gaming position={[0, -3, 0]} scale={[1, 1, 1]} />
+    <Typing  rotation={[0,3,0]} position={[0,-1.35,0.2]} scale={[1.5,1.5,1.5]}/>
     </>
   )} 
 

@@ -1,20 +1,43 @@
 import React, { useRef } from 'react'
-import { useGLTF } from '@react-three/drei'
+import { useGLTF, SpotLight, useHelper } from '@react-three/drei'
+import { DirectionalLight } from 'three'
 
 export default function Gaming(props) {
   const { nodes, materials } = useGLTF('/gaming/untitled.gltf')
+  const spotLightRef = useRef()
   return (
     <group {...props} dispose={null}>
 
-<ambientLight intensity={0.5} />
+
+
+<ambientLight intensity={0.3} color="#ffffff" />
 
 {/* SpotLight for a focused light effect */}
-<spotLight position={[5, 10, 5]} angle={0.3} penumbra={1} intensity={2} castShadow />
+<spotLight
+        ref={spotLightRef}
+        position={[5, 8, 5]}
+        angle={0.3}
+        penumbra={1}
+        intensity={1.5}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        color="#ffffff"
+      />
 
 {/* Point Light for glowing effects */}
-<pointLight position={[-2, 5, -3]} intensity={3} color="blue" distance={10} />
-<pointLight position={[2, 5, 3]} intensity={3} color="red" distance={10} />
-<pointLight position={[0, 3, 0]} intensity={1.5} color="purple" distance={8} />
+<pointLight position={[0, 3, 0]} intensity={0.5} color="#ff00ff" distance={10} />
+      <pointLight position={[-2, 3, -3]} intensity={0.4} color="#00ffff" distance={8} />
+      <pointLight position={[2, 3, 3]} intensity={0.4} color="#ffff00" distance={8} />
+
+     
+
+<group position={[-1.5, 5, -4]}>
+        <pointLight intensity={2} distance={5} color="#ff0000" />
+        <pointLight position={[0.5, 0, 0]} intensity={2} distance={5} color="#00ff00" />
+        <pointLight position={[1, 0, 0]} intensity={2} distance={5} color="#0000ff" />
+      </group>
+
       <group
         position={[-2.209, 5.812, -3.963]}
         rotation={[Math.PI / 2, 0, 0]}
@@ -86,8 +109,8 @@ export default function Gaming(props) {
         />
       </group>
       <group
-        position={[-3.527, 1.608, -2.039]}
-        rotation={[-Math.PI, 0.622, -Math.PI]}
+        position={[-3.527, 1.5, -2.3]}
+        rotation={[-Math.PI, 0.4, -Math.PI]}
         scale={0.032}>
         <mesh
           castShadow
@@ -511,14 +534,18 @@ export default function Gaming(props) {
         position={[-4.378, 0.412, -4.378]}
         scale={[0.19, 3.985, 0.19]}
       />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.Object_22.geometry}
-        material={materials['Material.011']}
-        position={[0, 0.412, 0]}
-        scale={4.378}
-      />
+     <mesh
+  castShadow
+  receiveShadow
+  geometry={nodes.Object_22.geometry}
+  material={materials['Material.011']}
+  position={[0, 0.412, 0]}  //wall
+  scale={4.378}
+>
+  {/* 🔥 Red Light - Gaming Effect */}
+ 
+</mesh>
+
       <mesh
         castShadow
         receiveShadow
@@ -526,7 +553,9 @@ export default function Gaming(props) {
         material={materials['Material.010']}
         position={[0, 0.412, 0]}
         scale={4.378}
-      />
+      >
+         
+        </mesh>
       <mesh
         castShadow
         receiveShadow
@@ -603,7 +632,10 @@ export default function Gaming(props) {
         material={materials['Material.018']}
         position={[-4.378, 4.763, -1.907]}
         rotation={[Math.PI / 2, 0, -Math.PI / 2]}
-      />
+      >
+         <directionalLight position={[1, 3, 2]} intensity={1.2} color="yellow" castShadow={false} />
+        <directionalLight position={[5, 2, 5]} intensity={1.2} color="#f8c291" castShadow={false} />
+        </mesh>
     </group>
   )
 }
