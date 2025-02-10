@@ -10,7 +10,7 @@ import Girl from "../components/Models/Girl";
 
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
-
+import Gaming from "../components/Models/Gaming";
 
 
 const socket = io("https://valentines-chat-app.onrender.com");
@@ -32,6 +32,7 @@ const Index = () => {
   const [callerId, setCallerId] = useState(null);
   const [activeUsers, setActiveUsers] = useState([]);
   const [callEndedMessage, setCallEndedMessage] = useState(null);
+  const [singleMode, setSingleMode] = useState(false);
 
   const audioRef = useRef(null);
   
@@ -356,10 +357,12 @@ const Index = () => {
   }, [lightsOn]);
 
   useEffect(() => {
-    if (lightsOn) {
-      // गाना लोड करें और प्ले करें
-      audioRef.current = new Audio('/Music/anuv.mp3');
-      audioRef.current.play().catch(error => {
+  if (lightsOn && !singleMode) {
+      if (!audioRef.current) {
+        audioRef.current = new Audio('/Music/anuv.mp3');
+      }
+
+      audioRef.current.play().catch((error) => {
         console.error('Audio play failed:', error);
       });
     } else {
@@ -377,7 +380,7 @@ const Index = () => {
         audioRef.current = null;
       }
     };
-  }, [lightsOn]);
+  }, [lightsOn,singleMode]);
 
   const handleEmojiSelect = (emoji) => {
     setMessage((prevMessage) => prevMessage + emoji.native);
@@ -411,6 +414,25 @@ const Index = () => {
       {/* Chatbox Toggle Button */}
       {lightsOn && (
         <>
+            <button
+      onClick={() => setSingleMode(!singleMode)}
+      style={{
+        position: "fixed",
+        top: "80px",
+        right: "20px",
+        zIndex: 1000,
+        padding: "10px",
+        backgroundColor: singleMode ? "#4CAF50" : "#ff69b4",
+        color: "#fff",
+        border: "none",
+        borderRadius: "50%",
+        cursor: "pointer",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+      }}
+    >
+      {singleMode ? "🎮" : "💖"}
+    </button>
+        
         {callEndedMessage && <CallEndedPopup />}
           {/* Chat Toggle Button */}
           <button
@@ -717,11 +739,14 @@ const Index = () => {
 
       {/* 3D Scene */}
       <Canvas style={{ width: "100%", height: "100%" }}>
-        <PerspectiveCamera
-          makeDefault
-          position={[-1.1, 2.14, 5.5]}
-          rotation={[-0.41, -0.02, -0.01]}
-        />
+        {!singleMode && (
+             <PerspectiveCamera
+             makeDefault
+             position={[-1.1, 2.14, 5.5]}
+             rotation={[-0.41, -0.02, -0.01]}
+           />
+        )}
+       
         <OrbitControls enableZoom={false} enableRotate={false} enablePan={false} />
 
         {/* Lights */}
@@ -734,16 +759,24 @@ const Index = () => {
           </>
         )}
 
-        <Slippers position={[0, 0.6, 0]} />
+        {!singleMode && (
+          <>
+                <Slippers position={[0, 0.6, 0]} />
+        {/* <Gaming position={[0, -2, 0]}/> */}
         <Avtar position={[-1.4, 0.6, 3]} />
         <Girl position={[-0.8, 0.6, 3.3]} />
 
         
         {/* Falling Hearts */}
         {hearts}
+<ContactShadows/>
 
+          </>
+        )}
+
+       
         {/* Text if lightsOn */}
-        {lightsOn && (
+        {lightsOn &&  !singleMode &&  (
           <>
             <Text3D
               font="./fonts/Irish Grover_Regular.json"
@@ -808,7 +841,19 @@ const Index = () => {
           </>
         )}
 
-        <ContactShadows />
+{singleMode && (
+  <>
+   <PerspectiveCamera
+             makeDefault
+             position={[3, 0.2, 3]}
+             rotation={[-1, -0.2, -0.01]}
+           />
+  <OrbitControls enableZoom={false} enableRotate={false} enablePan={false} />
+    <Gaming position={[0, -3, 0]} scale={[1, 1, 1]} />
+    </>
+  )} 
+
+        
       </Canvas>
     </div>
   );
