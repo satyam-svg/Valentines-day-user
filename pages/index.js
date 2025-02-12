@@ -1,4 +1,4 @@
-import { ContactShadows, OrbitControls, PerspectiveCamera, Text3D } from "@react-three/drei";
+import { ContactShadows, Html, OrbitControls, PerspectiveCamera, Text3D } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import React, { useEffect, useState,useRef } from "react";
 import { Slippers } from "../components/Models/Slippers";
@@ -7,11 +7,12 @@ import Avtar from "../components/Models/Avtar";
 import Heart from "../components/Models/Heart";
 import { io } from "socket.io-client";
 import Girl from "../components/Models/Girl";
-
+import { useThree } from "@react-three/fiber";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 import Gaming from "../components/Models/Gaming";
 import Typing from "../components/Models/Typing";
+
 
 
 const socket = io("https://valentines-chat-app.onrender.com");
@@ -36,6 +37,65 @@ const Index = () => {
   const [singleMode, setSingleMode] = useState(false);
 
   const audioRef = useRef(null);
+
+
+  const buttonStyle = {
+    padding: '15px 30px',
+    background: 'linear-gradient(45deg, #00ff00, #006600)',
+    border: 'none',
+    borderRadius: '8px',
+    color: 'black',
+    fontSize: '1.2em',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    transition: 'all 0.3s',
+    boxShadow: '0 0 10px #00ff00',
+    textTransform: 'uppercase',
+    letterSpacing: '2px'
+  }
+  
+  const controlBox = {
+    background: 'rgba(0, 255, 0, 0.05)',
+    padding: '20px',
+    borderRadius: '10px',
+    border: '1px solid rgba(0, 255, 0, 0.2)'
+  }
+  
+  const labelStyle = {
+    display: 'block',
+    marginBottom: '8px',
+    fontSize: '0.9em'
+  }
+  
+  const sliderStyle = {
+    width: '100%',
+    marginBottom: '20px',
+    accentColor: '#00ff00',
+    background: '#333'
+  }
+  
+  const statusItem = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: '12px',
+    padding: '8px',
+    background: 'rgba(0, 255, 0, 0.1)',
+    borderRadius: '5px'
+  }
+  
+  const progressBarContainer = {
+    height: '10px',
+    background: '#1a1a1a',
+    borderRadius: '5px',
+    marginTop: '15px',
+    overflow: 'hidden'
+  }
+  
+  const progressBar = {
+    height: '100%',
+    transition: 'width 0.3s ease',
+    boxShadow: '0 0 8px #00ff00'
+  }
   
 
   const emojiPickerRef = useRef(null);
@@ -218,6 +278,78 @@ const Index = () => {
     handleEndCall(); // Stop call for self
   };
 
+
+  const CaptureButton = () => {
+    const { gl, scene, camera } = useThree();
+  
+    const captureScene = () => {
+      // 1. Ensure the scene is rendered once more before capture
+      gl.render(scene, camera);
+      
+      // 2. Create temporary canvas to handle transparency
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Set canvas dimensions to match WebGL canvas
+      canvas.width = gl.domElement.width;
+      canvas.height = gl.domElement.height;
+      
+      // Fill background with white color
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw WebGL content on top
+      ctx.drawImage(gl.domElement, 0, 0);
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `valentine_moment_${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+  
+    return (
+      <>
+      
+      {lightsOn && (
+      
+        
+        <Html>
+        <button
+          onClick={captureScene}
+          style={{
+            position: "fixed",
+            bottom:'230px',
+            right: "560px",
+            padding: "12px 25px",
+            background: "linear-gradient(145deg, #ff69b4, #ff1493)",
+            color: "white",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "16px",
+            borderRadius: "30px",
+            boxShadow: "0 4px 15px rgba(255, 105, 180, 0.3)",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            transition: "all 0.3s ease",
+            zIndex: 1000,
+            fontFamily: "'Arial Rounded MT Bold', sans-serif",
+            border: "2px solid rgba(255, 255, 255, 0.2)",
+            height: "3rem",
+            width:'3rem',
+            justifyContent: "center", 
+          }}
+        >
+          📸
+        </button>
+      </Html>
+      )}
+      </>
+    );
+  };
 
   const CallEndedPopup = () => (
     <div style={{
@@ -747,7 +879,10 @@ const Index = () => {
       )}
 
       {/* 3D Scene */}
-      <Canvas style={{ width: "100%", height: "100%" }}>
+      <Canvas style={{ width: "100%", height: "100%" }}     gl={{
+    preserveDrawingBuffer: true, // ये लाइन जरूर जोड़ें
+    antialias: true
+  }}>
         {!singleMode && (
              <PerspectiveCamera
              makeDefault
@@ -774,6 +909,7 @@ const Index = () => {
         {/* <Gaming position={[0, -2, 0]}/> */}
         <Avtar position={[-1.4, 0.6, 3]} />
         <Girl position={[-0.8, 0.6, 3.3]} />
+        <CaptureButton/>
 
         
         {/* Falling Hearts */}
@@ -857,10 +993,12 @@ const Index = () => {
              position={[3, 0.2, 3]}
              rotation={[-1, -0.2, -0.01]}
            />
-  <OrbitControls enableZoom={false} enableRotate={false} enablePan={false} />
+  <OrbitControls  enableZoom={false} enableRotate={false} enablePan={false}/>
     
     <Gaming position={[0, -3, 0]} scale={[1, 1, 1]} />
-    <Typing  rotation={[0,3,0]} position={[0,-1.35,0.2]} scale={[1.5,1.5,1.5]}/>
+    <Typing  rotation={[0,3,0]} position={[-2,-1.5,-2]} scale={[1.5,1.5,1.5]}/>
+
+    
     </>
   )} 
 
@@ -871,3 +1009,10 @@ const Index = () => {
 };
 
 export default Index;
+
+
+
+
+
+
+//

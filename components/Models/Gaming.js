@@ -1,9 +1,17 @@
-import React, { useRef } from 'react'
-import { useGLTF, SpotLight, useHelper } from '@react-three/drei'
-import { DirectionalLight } from 'three'
+import React, { useRef, useState } from 'react';
+import { useGLTF, Html } from '@react-three/drei';
+import { CameraControls } from '@react-three/drei';
+import { useThree } from '@react-three/fiber';
 
 export default function Gaming(props) {
-  const { nodes, materials } = useGLTF('/gaming/untitled.gltf')
+  const { nodes, materials } = useGLTF('/gaming/untitled.gltf');
+  const cameraControlsRef = useRef();
+  const { camera } = useThree();
+  const [isZoomed, setIsZoomed] = useState(false);
+
+ 
+
+
   const spotLightRef = useRef()
   return (
     <group {...props} dispose={null}>
@@ -109,9 +117,9 @@ export default function Gaming(props) {
         />
       </group>
       <group
-        position={[-3.527, 1.5, -2.3]}
-        rotation={[-Math.PI, 0.4, -Math.PI]}
-        scale={0.032}>
+        position={[-2.5, 2, -1.7]}       //chair
+        rotation={[-Math.PI, 0, -Math.PI]}
+        scale={0.022}>
         <mesh
           castShadow
           receiveShadow
@@ -179,23 +187,30 @@ export default function Gaming(props) {
           material={materials['Metallic.001']}
         />
       </group>
-      <group position={[-1.548, 2.469, -4.016]} rotation={[-Math.PI / 2, 0, 0]} scale={0.242}>
+      <group position={[-1.548, 2.469, -4.016]} rotation={[-Math.PI / 2, 0, 0]} scale={0.242}>   //Screen
         <group rotation={[Math.PI / 2, 0, 0]}>
           <group position={[0.57, 0, 0]}>
-            <mesh
-              castShadow
-              receiveShadow
-              geometry={nodes.Object_68.geometry}
-              material={materials['Material.017']}
-            />
-            <mesh
-              castShadow
-              receiveShadow
-              geometry={nodes.Object_66.geometry}
-              material={materials.phong1}
-            />
+          <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Object_68.geometry}
+        material={materials['Material.017']}
+        
+        >
+        
+        
+       
+      </mesh>
+
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Object_66.geometry}
+        material={materials.phong1}
+      />
           </group>
         </group>
+       
       </group>
       <group position={[-0.453, 2.523, -3.1]} rotation={[-Math.PI / 2, 0, 0.303]} scale={3.22}>
         <group rotation={[Math.PI / 2, 0, 0]} scale={0.01}>
