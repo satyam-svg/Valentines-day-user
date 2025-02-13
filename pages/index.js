@@ -35,6 +35,7 @@ const Index = () => {
   const [activeUsers, setActiveUsers] = useState([]);
   const [callEndedMessage, setCallEndedMessage] = useState(null);
   const [singleMode, setSingleMode] = useState(false);
+  const [romanceMode, setRomanceMode] = useState(false);
 
   const audioRef = useRef(null);
 
@@ -281,8 +282,20 @@ const Index = () => {
 
   const CaptureButton = () => {
     const { gl, scene, camera } = useThree();
+    const soundRef = useRef(null);
+  
+    // Preload sound effect
+    useEffect(() => {
+      soundRef.current = new Audio('/Music/camera.mp3');
+      soundRef.current.load();
+    }, []);
   
     const captureScene = () => {
+      // Play camera sound
+      soundRef.current.play().catch(error => {
+        console.error('Error playing sound:', error);
+      });
+  
       // 1. Ensure the scene is rendered once more before capture
       gl.render(scene, camera);
       
@@ -311,17 +324,12 @@ const Index = () => {
     };
   
     return (
-      <>
-      
-      {lightsOn && (
-      
-        
-        <Html>
+      <Html>
         <button
           onClick={captureScene}
           style={{
             position: "fixed",
-            bottom:'230px',
+            bottom: '230px',
             right: "560px",
             padding: "12px 25px",
             background: "linear-gradient(145deg, #ff69b4, #ff1493)",
@@ -339,15 +347,13 @@ const Index = () => {
             fontFamily: "'Arial Rounded MT Bold', sans-serif",
             border: "2px solid rgba(255, 255, 255, 0.2)",
             height: "3rem",
-            width:'3rem',
-            justifyContent: "center", 
+            width: '3rem',
+            justifyContent: "center",
           }}
         >
           📸
         </button>
       </Html>
-      )}
-      </>
     );
   };
 
@@ -555,6 +561,25 @@ const Index = () => {
       {/* Chatbox Toggle Button */}
       {lightsOn && (
         <>
+
+<button
+  onClick={() => setRomanceMode(!romanceMode)}
+  style={{
+    position: "fixed",
+    top: "140px",
+    right: "20px",
+    zIndex: 1000,
+    padding: "10px",
+    backgroundColor: romanceMode ? "#ff69b4" : "#4CAF50",
+    color: "#fff",
+    border: "none",
+    borderRadius: "50%",
+    cursor: "pointer",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+  }}
+>
+  💑
+</button>
             <button
       onClick={() => setSingleMode(!singleMode)}
       style={{
@@ -907,8 +932,8 @@ const Index = () => {
           <>
                 <Slippers position={[0, 0.6, 0]} />
         {/* <Gaming position={[0, -2, 0]}/> */}
-        <Avtar position={[-1.4, 0.6, 3]} />
-        <Girl position={[-0.8, 0.6, 3.3]} />
+        <Avtar position={[-1.4, 0.6, 3]}  romanceMode={romanceMode}/>
+        <Girl position={[-1, 0.6, 3.3]} romanceMode={romanceMode}/>
         <CaptureButton/>
 
         
