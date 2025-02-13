@@ -15,6 +15,7 @@ import Typing from "../components/Models/Typing";
 
 
 
+
 const socket = io("https://valentines-chat-app.onrender.com");
 const Index = () => {
   const { lightsOn, setLightsOn } = useLights();
@@ -453,7 +454,7 @@ const Index = () => {
   };
   
 
-  const message = "";
+  const message = "Hey suno na , I am not good at writing love notes toh please thodaaa adjust karloge kya 😊 Please na , so mam please turn on the lights";       //sendina a love message 
   useEffect(() => {
     let i = 0;
     const interval = setInterval(() => {
@@ -559,6 +560,7 @@ const Index = () => {
   return (
     <div className="h-[100vh] relative">
       {/* Chatbox Toggle Button */}
+      
       {lightsOn && (
         <>
 
